@@ -88,7 +88,7 @@ public:
 	void async_accept_handler(std::shared_ptr<boost::asio::ip::tcp::socket>  peer, const boost::system::error_code &ec) {
         startup_async_accept();
 		if (ec) {
-            printf("acceptor::async_accept_handler %d", ec.value());
+            printf("acceptor::async_accept_handler %d\n", ec.value());
 		} else {
             static boost::asio::ip::tcp::no_delay option(true);
             peer->set_option(option);
@@ -121,7 +121,7 @@ public:
                                shared_ptr_peer forward_peer,
                                const boost::system::error_code& ec) {
         if (ec) {
-            printf("forward_peer::async_connect_handler can not connect to forward target");
+            printf("forward_peer::async_connect_handler can not connect to forward target\n");
         } else {
 
 
@@ -144,6 +144,8 @@ public:
 public:
     int startup(shared_ptr_peer incoming_peer) {
         auto forward_peer(std::make_shared<boost::asio::ip::tcp::socket>(io_service_));
+        printf("foward_peer::startup incoming peer %08X\n", &*incoming_peer);
+        printf("foward_peer::startup forward peer %08X\n", &*forward_peer);
         forward_peer->async_connect(forward_endport_,
                                     std::bind(&forward_peer::async_connect_handler,
                                               std::enable_shared_from_this<THIS_T>::shared_from_this(),
@@ -159,8 +161,9 @@ public:
                            boost::system::error_code ec,
                            size_t bytes_transferred) {
         if (ec) {
-            printf("foward_peer::async_send_handler");
+            printf("foward_peer::async_send_handler\n");
         } else {
+            printf("foward_peer::async_send_handler %08X %u bytes sent\n", &*sender, bytes_transferred);
             buffer->rd_ptr(bytes_transferred);
             if (buffer->empty()) {
                 auto xf = [this](shared_ptr_peer receiver, shared_ptr_peer sender, std::shared_ptr<message_block> buf) {
@@ -198,8 +201,9 @@ public:
                               boost::system::error_code ec,
                               size_t bytes_transferred) {
         if (ec) {
-            printf("foward_peer::async_receive_handler %d", ec.value());
+            printf("foward_peer::async_receive_handler %d\n", ec.value());
         } else {
+            printf("foward_peer::async_receive_handler %08X %u bytes received\n", &*receiver, bytes_transferred);
             buffer->wr_ptr(bytes_transferred);
             sender->async_send(boost::asio::buffer(buffer->rd_ptr(), buffer->length()),
                                std::bind<int>(&forward_peer::async_send_handler,
@@ -223,7 +227,7 @@ private:
 int main(int argc, const char * argv[])
 {
     if (argc < 4 || (argc - 1) % 4) {
-        printf("USAGE:%s incoming-port forward-addr forward-port", argv[0]);
+        printf("USAGE:%s incoming-addr incoming-port forward-addr forward-port\n", argv[0]);
         return 0;
     }
     boost::asio::io_service io_service;
@@ -253,7 +257,7 @@ int main(int argc, const char * argv[])
         
     }
     
-    
+    printf("startup running ...\n");
     io_service.run();
     return 0;
 }
