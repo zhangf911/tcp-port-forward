@@ -205,6 +205,18 @@ public:
         } else {
             printf("foward_peer::async_receive_handler %08X %u bytes received\n", &*receiver, bytes_transferred);
             buffer->wr_ptr(bytes_transferred);
+            {
+                char fn[1024];
+                memset(fn, 0, sizeof(fn));
+                sprintf(fn, "%x.bin", &*receiver);
+
+                FILE *fp = fopen(fn, "ab");
+                assert(fp);
+                auto rc = fwrite(buffer->rd_ptr(), 1, buffer->length(), fp);
+                assert(rc == buffer->length());
+                fflush(fp);
+                fclose(fp);
+            }
             sender->async_send(boost::asio::buffer(buffer->rd_ptr(), buffer->length()),
                                std::bind<int>(&forward_peer::async_send_handler,
                                               std::enable_shared_from_this<THIS_T>::shared_from_this(),
