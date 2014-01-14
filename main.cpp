@@ -38,12 +38,11 @@ public:
 
 public:
 	static std::shared_ptr<message_block> from_size(const uint32_t s) {
-        auto mb = std::shared_ptr<message_block>(new message_block(s));
-		return mb;
+        return std::shared_ptr<message_block>(new message_block(s));
 	}
 
 public:
-	std::size_t capacity() const { return &*buffer_base_ptr_ + buffer_length_ - wr_ptr_; }
+	std::size_t capacity() const { return (&*buffer_base_ptr_ + buffer_length_ - wr_ptr_); }
 	std::size_t length() const { return (wr_ptr_ - rd_ptr_); }
 	bool empty() const { return (wr_ptr_ == rd_ptr_); }
 
@@ -238,7 +237,7 @@ private:
 
 int main(int argc, const char * argv[])
 {
-    if (argc < 4 || (argc - 1) % 4) {
+    if (argc < 5 || (argc - 1) % 4) {
         printf("USAGE:%s incoming-addr incoming-port forward-addr forward-port\n", argv[0]);
         return 0;
     }
