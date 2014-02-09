@@ -100,7 +100,7 @@ public:
     }
 
     int async_send_handler(shared_ptr_peer sender,
-//                           shared_ptr_peer receiver,
+                           shared_ptr_peer receiver,
                            std::shared_ptr<boost::asio::streambuf> buffer,
                            boost::system::error_code ec,
                            size_t bytes_transferred) {
@@ -115,7 +115,7 @@ public:
                                    std::bind<int>(&forward_peer::async_send_handler,
                                                   std::enable_shared_from_this<THIS_T>::shared_from_this(),
                                                   sender,
-//                                                  receiver,
+                                                  receiver,
                                                   buffer,
                                                   std::placeholders::_1,
                                                   std::placeholders::_2));
@@ -123,26 +123,26 @@ public:
 
             } else {
                 printf("%08X >>>> fini\n", &*sender);
-//                receiver->async_receive(buffer->prepare(1024*1024),
-//                                        std::bind<int>(&forward_peer::async_receive_handler,
-//                                                       std::enable_shared_from_this<THIS_T>::shared_from_this(),
-//                                                       receiver,
-//                                                       sender,
-//                                                       buffer,
-//                                                       std::placeholders::_1,
-//                                                       std::placeholders::_2));
+                receiver->async_receive(buffer->prepare(1024*1024),
+                                        std::bind<int>(&forward_peer::async_receive_handler,
+                                                       std::enable_shared_from_this<THIS_T>::shared_from_this(),
+                                                       receiver,
+                                                       sender,
+                                                       buffer,
+                                                       std::placeholders::_1,
+                                                       std::placeholders::_2));
             }
         }
         return 0;
     }
 
-    void async_send(shared_ptr_peer sender, std::shared_ptr<boost::asio::streambuf> buffer) {
+    void async_send(shared_ptr_peer sender, shared_ptr_peer receiver, std::shared_ptr<boost::asio::streambuf> buffer) {
         printf("%08X >>>> start\n", &*sender);
         sender->async_send(boost::asio::buffer(buffer->data(), buffer->size()),
                            std::bind<int>(&forward_peer::async_send_handler,
                                           std::enable_shared_from_this<THIS_T>::shared_from_this(),
                                           sender,
-//                                          receiver,
+                                          receiver,
                                           buffer,
                                           std::placeholders::_1,
                                           std::placeholders::_2));
@@ -154,7 +154,7 @@ public:
                               boost::system::error_code ec,
                               size_t bytes_transferred) {
         if (ec) {
-            printf("foward_peer::async_receive_handler %d\n", ec.value());
+            printf("foward_peer::async_receive_handler %d %08X\n", ec.value(), &*receiver);
         } else {
             printf("foward_peer::async_receive_handler %08X %u bytes received\n", &*receiver, bytes_transferred);
 
@@ -172,19 +172,19 @@ public:
 //                fclose(fp);
 //            }
 
-            auto buf = std::make_shared<boost::asio::streambuf>(1024*1024);
-            receiver->async_receive(buf->prepare(1024*1024),
-                                    std::bind<int>(&forward_peer::async_receive_handler,
-                                                   std::enable_shared_from_this<THIS_T>::shared_from_this(),
-                                                   receiver,
-                                                   sender,
-                                                   buf,
-                                                   std::placeholders::_1,
-                                                   std::placeholders::_2));
-            receiver->get_io_service().post(std::bind(&forward_peer::async_send, std::enable_shared_from_this<THIS_T>::shared_from_this(),
-                                                      sender, buffer));
+//            auto buf = std::make_shared<boost::asio::streambuf>(1024*1024);
+//            receiver->async_receive(buf->prepare(1024*1024),
+//                                    std::bind<int>(&forward_peer::async_receive_handler,
+//                                                   std::enable_shared_from_this<THIS_T>::shared_from_this(),
+//                                                   receiver,
+//                                                   sender,
+//                                                   buf,
+//                                                   std::placeholders::_1,
+//                                                   std::placeholders::_2));
+//            receiver->get_io_service().post(std::bind(&forward_peer::async_send, std::enable_shared_from_this<THIS_T>::shared_from_this(),
+//                                                      sender, receiver, buffer));
 
-
+            async_send(sender, receiver, buffer);
 
         }
         return 0;
