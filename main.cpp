@@ -68,7 +68,6 @@ public:
         if (ec) {
             std::cout << "forward_peer::async_connect_handler can not connect to forward target " << ec.value() << std::endl;
         } else {
-
             auto xf = [this](shared_ptr_peer first, shared_ptr_peer second) {
                 auto buf = std::make_shared<boost::asio::streambuf>(1024*1024);
                 first->async_receive(buf->prepare(1024*16),
@@ -80,7 +79,6 @@ public:
                                                     std::placeholders::_1,
                                                     std::placeholders::_2));
             };
-
             xf(incoming_peer, forward_peer);
             xf(forward_peer, incoming_peer);
         }
@@ -111,7 +109,6 @@ public:
             std::cout << "foward_peer::async_send_handler " << &*sender << " " << bytes_transferred << " bytes sent" << std::endl;
             buffer->consume(bytes_transferred);
             if (buffer->size()) {
-
                 sender->async_send(boost::asio::buffer(buffer->data(), buffer->size()),
                                    std::bind<int>(&forward_peer::async_send_handler,
                                                   std::enable_shared_from_this<THIS_T>::shared_from_this(),
@@ -120,8 +117,6 @@ public:
                                                   buffer,
                                                   std::placeholders::_1,
                                                   std::placeholders::_2));
-
-
             } else {
                 receiver->async_receive(buffer->prepare(1024*1024),
                                         std::bind<int>(&forward_peer::async_receive_handler,
@@ -156,7 +151,6 @@ public:
             std::cout << "foward_peer::async_receive_handler " << &*receiver << " " << ec.value() << std::endl;
         } else {
             std::cout << "foward_peer::async_receive_handler " << &*receiver << " " << bytes_transferred << " bytes received -> " << &*sender << std::endl;
-
             buffer->commit(bytes_transferred);
 #if 0
             {
@@ -173,7 +167,6 @@ public:
             }
 #endif
             async_send(sender, receiver, buffer);
-
         }
         return 0;
     }
@@ -181,7 +174,6 @@ public:
 private:
     boost::asio::io_service &io_service_;
     T forward_endport_;
-
 };
 
 int main(int argc, const char * argv[])
@@ -195,8 +187,6 @@ int main(int argc, const char * argv[])
     for (auto &x: io_services) {
         new boost::asio::io_service::work(x);
     }
-
-    const std::size_t nb_asio_threads = 4;
 
     auto xf = [](std::array<boost::asio::io_service, 4> &ios) ->boost::asio::io_service& {
         static std::size_t index = 0;
@@ -222,12 +212,12 @@ int main(int argc, const char * argv[])
                                    ep)->startup_async_accept();
     }
     printf("startup running ...\n");
-    for (auto i = 0; i < nb_asio_threads - 1; ++i) {
-        auto f = static_cast<std::size_t(boost::asio::io_service::*)()>(&boost::asio::io_service::run);
+    for (auto i = 0; i < io_services.size() - 1; ++i) {
+        static auto f = static_cast<std::size_t(boost::asio::io_service::*)()>(&boost::asio::io_service::run);
         boost::asio::io_service& io = io_services[i];
         std::thread(std::bind(f, &io)).detach();
     }
-    io_services[nb_asio_threads - 1].run();
+    io_services.back().run();
     return 0;
 }
 
