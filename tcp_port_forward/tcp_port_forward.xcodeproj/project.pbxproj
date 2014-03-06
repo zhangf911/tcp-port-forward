@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		295C1B9818C8E83200BEDCCB /* configure.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 295C1B9718C8E83200BEDCCB /* configure.cpp */; };
+		295C1B9B18C8E87100BEDCCB /* configure.pb.cc in Sources */ = {isa = PBXBuildFile; fileRef = 295C1B9918C8E87100BEDCCB /* configure.pb.cc */; };
 		29E66D1D186930E800C4F48C /* tcp_port_forward.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 29E66D1C186930E800C4F48C /* tcp_port_forward.1 */; };
 		29E66D24186930FA00C4F48C /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 29E66D23186930FA00C4F48C /* main.cpp */; };
 /* End PBXBuildFile section */
@@ -25,6 +27,12 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		295C1B9618C8E83200BEDCCB /* configure.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = configure.h; path = ../../configure.h; sourceTree = "<group>"; };
+		295C1B9718C8E83200BEDCCB /* configure.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = configure.cpp; path = ../../configure.cpp; sourceTree = "<group>"; };
+		295C1B9918C8E87100BEDCCB /* configure.pb.cc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = configure.pb.cc; path = ../../configure.pb.cc; sourceTree = "<group>"; };
+		295C1B9A18C8E87100BEDCCB /* configure.pb.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = configure.pb.h; path = ../../configure.pb.h; sourceTree = "<group>"; };
+		295C1B9C18C8E8F600BEDCCB /* configure.proto */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = configure.proto; path = ../../configure.proto; sourceTree = "<group>"; };
+		295C1B9D18C8F9DF00BEDCCB /* local.lua */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = local.lua; path = ../../local.lua; sourceTree = "<group>"; };
 		29E66D17186930E800C4F48C /* tcp_port_forward */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = tcp_port_forward; sourceTree = BUILT_PRODUCTS_DIR; };
 		29E66D1C186930E800C4F48C /* tcp_port_forward.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = tcp_port_forward.1; sourceTree = "<group>"; };
 		29E66D23186930FA00C4F48C /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = main.cpp; path = ../../main.cpp; sourceTree = "<group>"; };
@@ -60,6 +68,12 @@
 		29E66D19186930E800C4F48C /* tcp_port_forward */ = {
 			isa = PBXGroup;
 			children = (
+				295C1B9D18C8F9DF00BEDCCB /* local.lua */,
+				295C1B9C18C8E8F600BEDCCB /* configure.proto */,
+				295C1B9618C8E83200BEDCCB /* configure.h */,
+				295C1B9918C8E87100BEDCCB /* configure.pb.cc */,
+				295C1B9A18C8E87100BEDCCB /* configure.pb.h */,
+				295C1B9718C8E83200BEDCCB /* configure.cpp */,
 				29E66D23186930FA00C4F48C /* main.cpp */,
 				29E66D1C186930E800C4F48C /* tcp_port_forward.1 */,
 			);
@@ -117,7 +131,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				295C1B9818C8E83200BEDCCB /* configure.cpp in Sources */,
 				29E66D24186930FA00C4F48C /* main.cpp in Sources */,
+				295C1B9B18C8E87100BEDCCB /* configure.pb.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -197,10 +213,22 @@
 			buildSettings = {
 				GENERATE_MASTER_OBJECT_FILE = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				OTHER_CFLAGS = "-I/usr/local/include";
+				OTHER_CFLAGS = (
+					"-I/usr/local/include",
+					"-I/Users/wenx/development/mo/include-c++11",
+					"-DBOOST_LOG_DYN_LINK",
+				);
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
+					"-llua",
+					"-lcrypto",
+					"-lluabind",
+					"-lboost_log",
+					"-lboost_log_setup",
 					"-lboost_system",
+					"-lssl",
+					"-lprotobuf",
+					"-lboost_thread",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -211,10 +239,22 @@
 			buildSettings = {
 				GENERATE_MASTER_OBJECT_FILE = NO;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				OTHER_CFLAGS = "-I/usr/local/include";
+				OTHER_CFLAGS = (
+					"-I/usr/local/include",
+					"-I/Users/wenx/development/mo/include-c++11",
+					"-DBOOST_LOG_DYN_LINK",
+				);
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
+					"-llua",
+					"-lcrypto",
+					"-lluabind",
+					"-lboost_log",
+					"-lboost_log_setup",
 					"-lboost_system",
+					"-lssl",
+					"-lprotobuf",
+					"-lboost_thread",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
