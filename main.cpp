@@ -241,13 +241,15 @@ int main(int argc, const char * argv[])
 	auto lambda_ep_provider = [](std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> endpoints) {
 		static uint32_t pos = 0;
 		auto &endpoint = (*endpoints)[++pos % endpoints->size()];
-		std::cout << endpoint.address() << ":" << endpoint.port() << std::endl;
+		//std::cout << endpoint.address() << ":" << endpoint.port() << std::endl;
 		static auto t0 = time(nullptr);
 		static uint32_t counter = 0;
 		++counter;
 		auto d = time(nullptr) - t0;
 		if (d) {
-			std::cout << (double)counter / (double)d << std::endl;
+//			std::cout << (double)counter / (double)d << std::endl;
+			print_info("%f\n", (double)counter / (double)d);
+
 		}
 		return endpoint;
 	};
