@@ -97,7 +97,7 @@ public:
     }
 
 public:
-    int startup(shared_ptr_peer incoming_peer) {
+    int startup(shared_ptr_peer &incoming_peer) {
         auto forward_peer(std::make_shared<boost::asio::ip::tcp::socket>(io_service_));
 //		std::cout << "foward_peer::startup incoming peer " << &*incoming_peer << std::endl;
 //		std::cout << "foward_peer::startup forward peer " << &*forward_peer << std::endl;
@@ -144,7 +144,7 @@ public:
         return 0;
     }
 
-    void async_send(shared_ptr_peer sender, shared_ptr_peer receiver, std::shared_ptr<message_block> buffer) {
+    void async_send(shared_ptr_peer sender, shared_ptr_peer receiver, std::shared_ptr<message_block> &buffer) {
         sender->async_send(boost::asio::buffer(buffer->data(), buffer->length()),
                            std::bind<int>(&forward_peer::async_send_handler,
                                           std::enable_shared_from_this<THIS_T>::shared_from_this(),
@@ -243,7 +243,7 @@ int main(int argc, const char * argv[])
 //	signals.add(10);
 //	signals.async_wait(xf_signal);
 
-	auto lambda_ep_provider = [](std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> endpoints) {
+	auto lambda_ep_provider = [](std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> endpoints) ->boost::asio::ip::tcp::endpoint& {
 		static uint32_t pos = 0;
 		auto &endpoint = (*endpoints)[++pos % endpoints->size()];
 		//std::cout << endpoint.address() << ":" << endpoint.port() << std::endl;
@@ -269,7 +269,7 @@ int main(int argc, const char * argv[])
 
 		}
 
-		typedef std::function<boost::asio::ip::tcp::endpoint()> endpoint_provider;
+		typedef std::function<boost::asio::ip::tcp::endpoint&()> endpoint_provider;
 
 		typedef acceptor<forward_peer<endpoint_provider>,endpoint_provider> ACCEPTOR;
 
