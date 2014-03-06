@@ -12,6 +12,7 @@
 
 #include <boost/asio.hpp>
 
+#include <message_block.hpp>
 #include <helper.hpp>
 
 #include "configure.h"
@@ -78,8 +79,10 @@ public:
             print_error("forward_peer::async_connect_handler can not connect to forward target\n");
         } else {
             auto xf = [this](shared_ptr_peer first, shared_ptr_peer second) {
-                auto buf = std::make_shared<boost::asio::streambuf>(1024*1024);
-                first->async_receive(buf->prepare(1024*16),
+//                auto buf = std::make_shared<boost::asio::streambuf>(1024*1024);
+//				auto buf = std::make_shared<std::array<char, 1024*128>>();
+				auto buf(message_block::from_size(1024*128));
+                first->async_receive(boost::asio::buffer(buf->wr_ptr(), buf->capacity()),//buf->prepare(1024*16),
                                      std::bind<int>(&forward_peer::async_receive_handler,
                                                     std::enable_shared_from_this<THIS_T>::shared_from_this(),
                                                     first,
@@ -109,16 +112,16 @@ public:
 
     int async_send_handler(shared_ptr_peer sender,
                            shared_ptr_peer receiver,
-                           std::shared_ptr<boost::asio::streambuf> buffer,
+                           std::shared_ptr<message_block> buffer,//std::shared_ptr<boost::asio::streambuf> buffer,
                            boost::system::error_code ec,
                            size_t bytes_transferred) {
         if (ec) {
             //std::cout << "foward_peer::async_send_handler " << &*sender << " " << ec.value() << std::endl;
         } else {
             //std::cout << "foward_peer::async_send_handler " << &*sender << " " << bytes_transferred << " bytes sent" << std::endl;
-            buffer->consume(bytes_transferred);
-            if (buffer->size()) {
-                sender->async_send(boost::asio::buffer(buffer->data(), buffer->size()),
+            buffer->rd_ptr(bytes_transferred);
+            if (buffer->length()) {
+                sender->async_send(boost::asio::buffer(buffer->data(), buffer->length()),
                                    std::bind<int>(&forward_peer::async_send_handler,
                                                   std::enable_shared_from_this<THIS_T>::shared_from_this(),
                                                   sender,
@@ -127,7 +130,8 @@ public:
                                                   std::placeholders::_1,
                                                   std::placeholders::_2));
             } else {
-                receiver->async_receive(buffer->prepare(1024*1024),
+				buffer->reset();
+                receiver->async_receive(boost::asio::buffer(buffer->wr_ptr(), buffer->capacity()),//buffer->prepare(1024*1024),
                                         std::bind<int>(&forward_peer::async_receive_handler,
                                                        std::enable_shared_from_this<THIS_T>::shared_from_this(),
                                                        receiver,
@@ -140,8 +144,8 @@ public:
         return 0;
     }
 
-    void async_send(shared_ptr_peer sender, shared_ptr_peer receiver, std::shared_ptr<boost::asio::streambuf> buffer) {
-        sender->async_send(boost::asio::buffer(buffer->data(), buffer->size()),
+    void async_send(shared_ptr_peer sender, shared_ptr_peer receiver, std::shared_ptr<message_block> buffer) {
+        sender->async_send(boost::asio::buffer(buffer->data(), buffer->length()),
                            std::bind<int>(&forward_peer::async_send_handler,
                                           std::enable_shared_from_this<THIS_T>::shared_from_this(),
                                           sender,
@@ -153,14 +157,15 @@ public:
 
     int async_receive_handler(shared_ptr_peer receiver,
                               shared_ptr_peer sender,
-                              std::shared_ptr<boost::asio::streambuf> buffer,
+                              std::shared_ptr<message_block> buffer,//std::shared_ptr<boost::asio::streambuf> buffer,
                               boost::system::error_code ec,
                               size_t bytes_transferred) {
         if (ec) {
             //std::cout << "foward_peer::async_receive_handler " << &*receiver << " " << ec.value() << std::endl;
         } else {
             //std::cout << "foward_peer::async_receive_handler " << &*receiver << " " << bytes_transferred << " bytes received -> " << &*sender << std::endl;
-            buffer->commit(bytes_transferred);
+//            buffer->commit(bytes_transferred);
+			buffer->wr_ptr(bytes_transferred);
 #if 0
             {
                 char fn[1024];
