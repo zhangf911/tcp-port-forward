@@ -217,6 +217,12 @@
 					"-I/usr/local/include",
 					"-I/Users/wenx/development/mo/include-c++11",
 					"-DBOOST_LOG_DYN_LINK",
+					"-DENABLE_TRACE",
+					"-DENABLE_DEBUG",
+					"-DENABLE_INFO",
+					"-DENABLE_WARNING",
+					"-DENABLE_ERROR",
+					"-DENABLE_FETAL",
 				);
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
@@ -243,6 +249,12 @@
 					"-I/usr/local/include",
 					"-I/Users/wenx/development/mo/include-c++11",
 					"-DBOOST_LOG_DYN_LINK",
+					"-DENABLE_TRACE",
+					"-DENABLE_DEBUG",
+					"-DENABLE_INFO",
+					"-DENABLE_WARNING",
+					"-DENABLE_ERROR",
+					"-DENABLE_FETAL",
 				);
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",

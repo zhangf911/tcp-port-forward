@@ -247,7 +247,7 @@ int main(int argc, const char * argv[])
 		static uint32_t pos = 0;
 		auto &endpoint = (*endpoints)[++pos % endpoints->size()];
 //		std::cout << endpoint.address() << ":" << endpoint.port() << std::endl;
-		print_info("dipatch to %s:%u\n", endpoint.address().c_str(), endpoint.port());
+		print_info("dipatch to %s:%u\n", endpoint.address().to_v4().to_string().c_str(), endpoint.port());
 		static auto t0 = time(nullptr);
 		static uint32_t counter = 0;
 		++counter;
