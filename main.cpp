@@ -289,7 +289,7 @@ int main(int argc, const char * argv[])
 						char buf[1024];
 						memset(buf, 0, sizeof(buf));
 
-						sprintf(buf, "%s %u total %llu ", am.local().addr().c_str(), am.local().port(), total_dispatched->load());
+						sprintf(buf, "%s %u total %lu ", am.local().addr().c_str(), am.local().port(), total_dispatched->load());
 
 						s += buf;
 
