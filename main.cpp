@@ -295,7 +295,7 @@ int main(int argc, const char * argv[])
 
 						for (auto &x: *peps) {
 							memset(buf, 0, sizeof(buf));
-							sprintf(buf, "%s %u %llu ", std::get<0>(x).address().to_string().c_str(),
+							sprintf(buf, "%s %u %lu ", std::get<0>(x).address().to_string().c_str(),
 									std::get<0>(x).port(),
 									std::get<1>(x)->load());
 							s += buf;
