@@ -90,11 +90,17 @@ private:
 public:
     void async_connect_handler(std::shared_ptr<forwared_peer_context> receiver,
                                std::shared_ptr<forwared_peer_context> sender,
+							   std::weak_ptr<boost::asio::deadline_timer> timer,
                                const boost::system::error_code& ec) {
         if (ec) {
             print_error("forward_peer::async_connect_handler failure %d, retry next element.\n", ec.value());
 			startup(std::get<0>(*receiver));
         } else {
+			auto xtimer = timer.lock();
+			if (xtimer) {
+				xtimer->cancel();
+			}
+
 			async_receive_startup(receiver, sender);
 			async_receive_startup(sender, receiver);
         }
@@ -103,12 +109,45 @@ public:
 public:
     int startup(std::shared_ptr<boost::asio::ip::tcp::socket> &incoming_peer) {
         auto forward_peer(std::make_shared<boost::asio::ip::tcp::socket>(io_service_));
+
+		auto timer(std::make_shared<boost::asio::deadline_timer>(io_service_));
+		timer->expires_from_now(boost::posix_time::seconds(1));
+
+		std::weak_ptr<boost::asio::deadline_timer> wptr_timer = timer;
         forward_peer->async_connect(forward_endport_(),
                                     std::bind(&forward_peer::async_connect_handler,
                                               std::enable_shared_from_this<THIS_T>::shared_from_this(),
                                               std::make_shared<forwared_peer_context>(std::make_tuple(incoming_peer, buffers_list())),
                                               std::make_shared<forwared_peer_context>(std::make_tuple(forward_peer, buffers_list())),
+											  wptr_timer,
                                               std::placeholders::_1));
+
+		struct __helper {
+			static void on_timer(std::shared_ptr<boost::asio::deadline_timer> timer,
+								 std::shared_ptr<boost::asio::ip::tcp::socket> peer,
+								 const boost::system::error_code& ec) {
+				if (ec) {
+					print_trace("forward::startup::__helper::on_timer %d\n", ec.value());
+				} else {
+//					forward_peer::shutdown(peer);
+//					boost::system::error_code
+
+
+					try {
+						boost::system::error_code ecc;
+						peer->cancel(ecc);
+					} catch (std::exception e) {
+						print_error("forward_peer::startup::__helper::on_timer %s", e.what());
+					}
+				}
+			}
+		};
+
+		timer->async_wait(std::bind(__helper::on_timer,
+									timer,
+									forward_peer,
+									std::placeholders::_1));
+
         return 0;
     }
 
@@ -118,7 +157,7 @@ public:
                            size_t bytes_transferred) {
         if (ec) {
 			print_error("forward_peer::async_send_handler failure %d\n", ec.value());
-			shutdown(receiver);
+			shutdown(std::get<0>(*receiver));
         } else {
 			auto &buffer = std::get<1>(*sender).front();
             buffer->rd_ptr(bytes_transferred);
@@ -141,10 +180,10 @@ public:
         return 0;
     }
 
-	void shutdown(std::shared_ptr<forwared_peer_context> &peer) {
+	static void shutdown(std::shared_ptr<boost::asio::ip::tcp::socket> &peer) {
 		try {
 			boost::system::error_code ec;
-			auto s = std::get<0>(*peer);
+			auto s = peer;
 			if (s) {
 				s->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 			}
@@ -160,7 +199,7 @@ public:
                               size_t bytes_transferred) {
         if (ec || bytes_transferred == 0) {
 			print_error("forward_peer::async_receive_handler failure %d\n", ec.value());
-			shutdown(sender);
+			shutdown(std::get<0>(*sender));
         } else {
 			buffer->wr_ptr(bytes_transferred);
 #if 0
@@ -182,6 +221,7 @@ public:
 
 			auto &buffers = std::get<1>(*sender);
 			if (buffers.empty()) {
+				buffers.push_back(buffer);
 				auto &buffer = buffers.front();
 				std::get<0>(*sender)->async_send(boost::asio::buffer(buffer->data(), buffer->length()),
 												 std::bind(&forward_peer::async_send_handler,
