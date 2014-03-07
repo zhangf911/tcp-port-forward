@@ -12,7 +12,7 @@ function update_configure(c)
 	local z = x:add_remotes()
 
 	z:set_addr("192.168.2.193")
-	z:set_port(8088)
+	z:set_port(8188)
 
 
 	z = x:add_remotes()
