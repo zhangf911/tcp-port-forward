@@ -243,32 +243,39 @@ int main(int argc, const char * argv[])
 //	signals.add(10);
 //	signals.async_wait(xf_signal);
 
-	auto lambda_ep_provider = [](std::shared_ptr<std::vector<boost::asio::ip::tcp::endpoint>> endpoints) ->boost::asio::ip::tcp::endpoint& {
-		static uint32_t pos = 0;
-		auto &endpoint = (*endpoints)[++pos % endpoints->size()];
-//		std::cout << endpoint.address() << ":" << endpoint.port() << std::endl;
-		print_info("dipatch to %s:%u\n", endpoint.address().to_v4().to_string().c_str(), endpoint.port());
-		static auto t0 = time(nullptr);
-		static uint32_t counter = 0;
-		++counter;
-		auto t1 = time(nullptr);
-		if (t1 != t0) {
-//			std::cout << (double)counter / (double)d << std::endl;
-			print_info("%u\n", counter);
-			counter = 0;
-			t0 = t1;
+	typedef std::tuple<boost::asio::ip::tcp::endpoint,std::atomic<uint64_t>*> element;
+	typedef std::vector<element> endpoints;
 
-		}
-		return endpoint;
+	auto lambda_ep_provider = [](std::shared_ptr<endpoints> eps, std::atomic<uint64_t> *counter) ->boost::asio::ip::tcp::endpoint& {
+		static uint32_t pos = 0;
+		auto &ep = (*eps)[++pos % eps->size()];
+//		std::cout << endpoint.address() << ":" << endpoint.port() << std::endl;
+//		print_info("dipatch to %s:%u\n", endpoint.address().to_v4().to_string().c_str(), endpoint.port());
+//		static auto t0 = time(nullptr);
+//		static uint32_t counter = 0;
+//		++counter;
+//		auto t1 = time(nullptr);
+//		if (t1 != t0) {
+////			std::cout << (double)counter / (double)d << std::endl;
+//			print_info("%u\n", counter);
+//			counter = 0;
+//			t0 = t1;
+//
+//		}
+		++(*counter);
+		++(*std::get<1>(ep));
+		return std::ref(std::get<0>(ep));
 	};
 
 	for (auto i = 0; i < global::instance().configure().maps_size(); ++i) {
-		auto provider = std::make_shared<std::vector<boost::asio::ip::tcp::endpoint>>();
+		auto provider = std::make_shared<endpoints>();
 
 		for (auto j = 0; j < global::instance().configure().maps(i).remotes_size(); ++j) {
 			auto addr = global::instance().configure().maps(i).remotes(j).addr();
 			auto port = global::instance().configure().maps(i).remotes(j).port();
-			provider->push_back(boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(addr), port));
+
+			element e = std::make_tuple(boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(addr), port), new std::atomic<uint64_t>(0));
+			provider->push_back(e);
 
 		}
 
@@ -277,11 +284,58 @@ int main(int argc, const char * argv[])
 		typedef acceptor<forward_peer<endpoint_provider>,endpoint_provider> ACCEPTOR;
 
 		if (!provider->empty()) {
+
+			auto pc = new std::atomic<uint64_t>(0);
 			auto acceptor = std::make_shared<ACCEPTOR>(std::bind(xf, std::ref(io_services)),
 													   global::instance().configure().maps(i).local().addr().c_str(),
 													   global::instance().configure().maps(i).local().port(),
-													   std::bind(lambda_ep_provider, provider));
+													   std::bind(lambda_ep_provider, provider, pc));
 			acceptor->startup_async_accept();
+
+
+
+			struct __helper {
+				static void on_timer(std::shared_ptr<boost::asio::deadline_timer> timer,
+									 const ::addr_map &am,
+									 endpoints *peps,
+									 std::atomic<uint64_t> *pc,
+									 const boost::system::error_code& ec) {
+					if (ec) {
+						print_error("__helper::on_timer %d\n", ec);
+					} else {
+						std::string s;
+						char buf[1024];
+						memset(buf, 0, sizeof(buf));
+
+						sprintf(buf, "%s %u total %llu ", am.local().addr().c_str(), am.local().port(), pc->load());
+
+						s += buf;
+
+						for (auto &x: *peps) {
+							memset(buf, 0, sizeof(buf));
+							sprintf(buf, "%s %u %llu ", std::get<0>(x).address().to_string().c_str(),
+									std::get<0>(x).port(),
+									std::get<1>(x)->load());
+							s += buf;
+						}
+
+						print_info("%s\n", s.c_str());
+
+
+						timer->expires_from_now(boost::posix_time::seconds(10));
+						timer->async_wait(std::bind(__helper::on_timer, timer, std::ref(am), peps, pc, std::placeholders::_1));
+
+					}
+
+
+				}
+			};
+
+
+			auto timer(std::make_shared<boost::asio::deadline_timer>(xf(io_services)));
+            timer->expires_from_now(boost::posix_time::seconds(10));
+			timer->async_wait(std::bind(__helper::on_timer, timer, global::instance().configure().maps(i), &*provider, pc, std::placeholders::_1));
+
 		}
 
 

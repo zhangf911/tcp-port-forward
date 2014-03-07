@@ -19,5 +19,5 @@ function update_configure(c)
 	z:set_addr("192.168.2.230")
 	z:set_port(8088)
 
-    c:set_run_as_daemon(1)                                                          --服务器后台运行 using both
+    c:set_run_as_daemon(0)                                                          --服务器后台运行 using both
 end
