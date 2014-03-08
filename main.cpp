@@ -129,16 +129,7 @@ public:
 				if (ec) {
 					print_trace("forward::startup::__helper::on_timer %d\n", ec.value());
 				} else {
-//					forward_peer::shutdown(peer);
-//					boost::system::error_code
-
-
-					try {
-						boost::system::error_code ecc;
-						peer->cancel(ecc);
-					} catch (std::exception e) {
-						print_error("forward_peer::startup::__helper::on_timer %s", e.what());
-					}
+					forward_peer::shutdown(peer);
 				}
 			}
 		};
@@ -180,16 +171,9 @@ public:
         return 0;
     }
 
-	static void shutdown(std::shared_ptr<boost::asio::ip::tcp::socket> &peer) {
-		try {
-			boost::system::error_code ec;
-			auto s = peer;
-			if (s) {
-				s->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
-			}
-		} catch (std::exception e) {
-			print_error("forward_peer::shutdown %s", e.what());
-		}
+	static void shutdown(std::shared_ptr<boost::asio::ip::tcp::socket> peer) {
+		boost::system::error_code ec(boost::asio::error::timed_out);
+		peer->shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
 	}
 
     int async_receive_handler(std::shared_ptr<forwared_peer_context> receiver,

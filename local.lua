@@ -7,7 +7,7 @@ function update_configure(c)
 	local y = x:mutable_local()
 
 	y:set_addr("0.0.0.0")
-	y:set_port(7777)
+	y:set_port(9999)
 
 	local z = x:add_remotes()
 
