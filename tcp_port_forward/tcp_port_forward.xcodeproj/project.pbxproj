@@ -235,6 +235,7 @@
 					"-lssl",
 					"-lprotobuf",
 					"-lboost_thread",
+					"-llog4cplus",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
@@ -267,6 +268,7 @@
 					"-lssl",
 					"-lprotobuf",
 					"-lboost_thread",
+					"-llog4cplus",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};

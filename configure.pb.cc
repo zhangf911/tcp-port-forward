@@ -55,7 +55,7 @@ void protobuf_AssignDesc_configure_2eproto() {
       sizeof(addr_info));
   addr_map_descriptor_ = file->message_type(1);
   static const int addr_map_offsets_[2] = {
-    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(addr_map, local_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(addr_map, locals_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(addr_map, remotes_),
   };
   addr_map_reflection_ =
@@ -125,11 +125,11 @@ void protobuf_AddDesc_configure_2eproto() {
 
   ::google::protobuf::DescriptorPool::InternalAddGeneratedFile(
     "\n\017configure.proto\"(\n\taddr_info\022\014\n\004addr\030d"
-    " \002(\t\022\r\n\004port\030\310\001 \002(\r\"C\n\010addr_map\022\031\n\005local"
-    "\030d \002(\0132\n.addr_info\022\034\n\007remotes\030\310\001 \003(\0132\n.a"
-    "ddr_info\"W\n\tconfigure\022\027\n\004maps\030d \003(\0132\t.ad"
-    "dr_map\022\026\n\rrun_as_daemon\030\310\001 \002(\r\022\031\n\020server"
-    "_crash_run\030\300\002 \001(\t", 217);
+    " \002(\t\022\r\n\004port\030\310\001 \002(\r\"D\n\010addr_map\022\032\n\006local"
+    "s\030d \003(\0132\n.addr_info\022\034\n\007remotes\030\310\001 \003(\0132\n."
+    "addr_info\"W\n\tconfigure\022\027\n\004maps\030d \003(\0132\t.a"
+    "ddr_map\022\026\n\rrun_as_daemon\030\310\001 \002(\r\022\031\n\020serve"
+    "r_crash_run\030\300\002 \001(\t", 218);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "configure.proto", &protobuf_RegisterTypes);
   addr_info::default_instance_ = new addr_info();
@@ -417,7 +417,7 @@ void addr_info::Swap(addr_info* other) {
 // ===================================================================
 
 #ifndef _MSC_VER
-const int addr_map::kLocalFieldNumber;
+const int addr_map::kLocalsFieldNumber;
 const int addr_map::kRemotesFieldNumber;
 #endif  // !_MSC_VER
 
@@ -427,7 +427,6 @@ addr_map::addr_map()
 }
 
 void addr_map::InitAsDefaultInstance() {
-  local_ = const_cast< ::addr_info*>(&::addr_info::default_instance());
 }
 
 addr_map::addr_map(const addr_map& from)
@@ -438,7 +437,6 @@ addr_map::addr_map(const addr_map& from)
 
 void addr_map::SharedCtor() {
   _cached_size_ = 0;
-  local_ = NULL;
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
 }
 
@@ -448,7 +446,6 @@ addr_map::~addr_map() {
 
 void addr_map::SharedDtor() {
   if (this != default_instance_) {
-    delete local_;
   }
 }
 
@@ -474,11 +471,7 @@ addr_map* addr_map::New() const {
 }
 
 void addr_map::Clear() {
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (has_local()) {
-      if (local_ != NULL) local_->::addr_info::Clear();
-    }
-  }
+  locals_.Clear();
   remotes_.Clear();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
@@ -490,15 +483,17 @@ bool addr_map::MergePartialFromCodedStream(
   ::google::protobuf::uint32 tag;
   while ((tag = input->ReadTag()) != 0) {
     switch (::google::protobuf::internal::WireFormatLite::GetTagFieldNumber(tag)) {
-      // required .addr_info local = 100;
+      // repeated .addr_info locals = 100;
       case 100: {
         if (::google::protobuf::internal::WireFormatLite::GetTagWireType(tag) ==
             ::google::protobuf::internal::WireFormatLite::WIRETYPE_LENGTH_DELIMITED) {
+         parse_locals:
           DO_(::google::protobuf::internal::WireFormatLite::ReadMessageNoVirtual(
-               input, mutable_local()));
+                input, add_locals()));
         } else {
           goto handle_uninterpreted;
         }
+        if (input->ExpectTag(802)) goto parse_locals;
         if (input->ExpectTag(1602)) goto parse_remotes;
         break;
       }
@@ -536,10 +531,10 @@ bool addr_map::MergePartialFromCodedStream(
 
 void addr_map::SerializeWithCachedSizes(
     ::google::protobuf::io::CodedOutputStream* output) const {
-  // required .addr_info local = 100;
-  if (has_local()) {
+  // repeated .addr_info locals = 100;
+  for (int i = 0; i < this->locals_size(); i++) {
     ::google::protobuf::internal::WireFormatLite::WriteMessageMaybeToArray(
-      100, this->local(), output);
+      100, this->locals(i), output);
   }
 
   // repeated .addr_info remotes = 200;
@@ -556,11 +551,11 @@ void addr_map::SerializeWithCachedSizes(
 
 ::google::protobuf::uint8* addr_map::SerializeWithCachedSizesToArray(
     ::google::protobuf::uint8* target) const {
-  // required .addr_info local = 100;
-  if (has_local()) {
+  // repeated .addr_info locals = 100;
+  for (int i = 0; i < this->locals_size(); i++) {
     target = ::google::protobuf::internal::WireFormatLite::
       WriteMessageNoVirtualToArray(
-        100, this->local(), target);
+        100, this->locals(i), target);
   }
 
   // repeated .addr_info remotes = 200;
@@ -580,15 +575,14 @@ void addr_map::SerializeWithCachedSizes(
 int addr_map::ByteSize() const {
   int total_size = 0;
 
-  if (_has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    // required .addr_info local = 100;
-    if (has_local()) {
-      total_size += 2 +
-        ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
-          this->local());
-    }
-
+  // repeated .addr_info locals = 100;
+  total_size += 2 * this->locals_size();
+  for (int i = 0; i < this->locals_size(); i++) {
+    total_size +=
+      ::google::protobuf::internal::WireFormatLite::MessageSizeNoVirtual(
+        this->locals(i));
   }
+
   // repeated .addr_info remotes = 200;
   total_size += 2 * this->remotes_size();
   for (int i = 0; i < this->remotes_size(); i++) {
@@ -622,12 +616,8 @@ void addr_map::MergeFrom(const ::google::protobuf::Message& from) {
 
 void addr_map::MergeFrom(const addr_map& from) {
   GOOGLE_CHECK_NE(&from, this);
+  locals_.MergeFrom(from.locals_);
   remotes_.MergeFrom(from.remotes_);
-  if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
-    if (from.has_local()) {
-      mutable_local()->::addr_info::MergeFrom(from.local());
-    }
-  }
   mutable_unknown_fields()->MergeFrom(from.unknown_fields());
 }
 
@@ -644,10 +634,9 @@ void addr_map::CopyFrom(const addr_map& from) {
 }
 
 bool addr_map::IsInitialized() const {
-  if ((_has_bits_[0] & 0x00000001) != 0x00000001) return false;
 
-  if (has_local()) {
-    if (!this->local().IsInitialized()) return false;
+  for (int i = 0; i < locals_size(); i++) {
+    if (!this->locals(i).IsInitialized()) return false;
   }
   for (int i = 0; i < remotes_size(); i++) {
     if (!this->remotes(i).IsInitialized()) return false;
@@ -657,7 +646,7 @@ bool addr_map::IsInitialized() const {
 
 void addr_map::Swap(addr_map* other) {
   if (other != this) {
-    std::swap(local_, other->local_);
+    locals_.Swap(&other->locals_);
     remotes_.Swap(&other->remotes_);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);

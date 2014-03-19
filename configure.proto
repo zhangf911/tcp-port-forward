@@ -7,7 +7,8 @@ message addr_info {
 }
 
 message addr_map {
-	required addr_info local = 100;
+//	required addr_info local = 100;
+	repeated addr_info locals = 100;
 	repeated addr_info remotes = 200;
 }
 

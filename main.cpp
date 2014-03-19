@@ -282,7 +282,8 @@ int main(int argc, const char * argv[])
 			auto addr = global::instance().configure().maps(i).remotes(j).addr();
 			auto port = global::instance().configure().maps(i).remotes(j).port();
 
-			element e = std::make_tuple(boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(addr), port), std::make_shared<std::atomic<uint64_t>>(0));
+			element e = std::make_tuple(boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(addr), port),
+										std::make_shared<std::atomic<uint64_t>>(0));
 			provider->push_back(e);
 
 		}
@@ -294,12 +295,18 @@ int main(int argc, const char * argv[])
 		if (!provider->empty()) {
 
 			auto total_dispatched = std::make_shared<std::atomic<uint64_t>>(0);
-			auto acceptor = std::make_shared<ACCEPTOR>(std::bind(xf, std::ref(io_services)),
-													   global::instance().configure().maps(i).local().addr().c_str(),
-													   global::instance().configure().maps(i).local().port(),
-													   std::bind(lambda_ep_provider, provider, total_dispatched));
-			acceptor->startup_async_accept();
 
+			for (auto j = 0; j < global::instance().configure().maps(i).locals_size(); ++j) {
+				auto addr = global::instance().configure().maps(i).locals(j).addr();
+				auto port = global::instance().configure().maps(i).locals(j).port();
+
+
+				auto acceptor = std::make_shared<ACCEPTOR>(std::bind(xf, std::ref(io_services)),
+														   addr.c_str(),
+														   port,
+														   std::bind(lambda_ep_provider, provider, total_dispatched));
+				acceptor->startup_async_accept();
+			}
 			struct __helper {
 				static void on_timer(std::shared_ptr<boost::asio::deadline_timer> timer,
 									 const ::addr_map &am,
@@ -313,13 +320,18 @@ int main(int argc, const char * argv[])
 						char buf[1024];
 						memset(buf, 0, sizeof(buf));
 
-						sprintf(buf, "%s %u total %lu ", am.local().addr().c_str(), am.local().port(), total_dispatched->load());
+						for (auto i = 0; i < am.locals_size(); ++i) {
+							sprintf(buf, "%s:%u <-\n", am.locals(i).addr().c_str(), am.locals(i).port());
+							s += buf;
+						}
+
+						sprintf(buf, "total dispatched times: %lu \n", total_dispatched->load());
 
 						s += buf;
 
 						for (auto &x: *peps) {
 							memset(buf, 0, sizeof(buf));
-							sprintf(buf, "%s %u %lu ", std::get<0>(x).address().to_string().c_str(),
+							sprintf(buf, "-> %s:%u %lu\n", std::get<0>(x).address().to_string().c_str(),
 									std::get<0>(x).port(),
 									std::get<1>(x)->load());
 							s += buf;
@@ -356,6 +368,8 @@ int main(int argc, const char * argv[])
 
 
     print_info("startup asio threads pool ...\n");
+    printf    ("startup asio threads pool ...\n");
+
     for (auto i = 0; i < io_services.size() - 1; ++i) {
         static auto f = static_cast<std::size_t(boost::asio::io_service::*)()>(&boost::asio::io_service::run);
         boost::asio::io_service& io = io_services[i];

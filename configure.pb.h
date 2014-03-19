@@ -188,14 +188,17 @@ class addr_map : public ::google::protobuf::Message {
 
   // accessors -------------------------------------------------------
 
-  // required .addr_info local = 100;
-  inline bool has_local() const;
-  inline void clear_local();
-  static const int kLocalFieldNumber = 100;
-  inline const ::addr_info& local() const;
-  inline ::addr_info* mutable_local();
-  inline ::addr_info* release_local();
-  inline void set_allocated_local(::addr_info* local);
+  // repeated .addr_info locals = 100;
+  inline int locals_size() const;
+  inline void clear_locals();
+  static const int kLocalsFieldNumber = 100;
+  inline const ::addr_info& locals(int index) const;
+  inline ::addr_info* mutable_locals(int index);
+  inline ::addr_info* add_locals();
+  inline const ::google::protobuf::RepeatedPtrField< ::addr_info >&
+      locals() const;
+  inline ::google::protobuf::RepeatedPtrField< ::addr_info >*
+      mutable_locals();
 
   // repeated .addr_info remotes = 200;
   inline int remotes_size() const;
@@ -211,12 +214,10 @@ class addr_map : public ::google::protobuf::Message {
 
   // @@protoc_insertion_point(class_scope:addr_map)
  private:
-  inline void set_has_local();
-  inline void clear_has_local();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
-  ::addr_info* local_;
+  ::google::protobuf::RepeatedPtrField< ::addr_info > locals_;
   ::google::protobuf::RepeatedPtrField< ::addr_info > remotes_;
 
   mutable int _cached_size_;
@@ -442,42 +443,29 @@ inline void addr_info::set_port(::google::protobuf::uint32 value) {
 
 // addr_map
 
-// required .addr_info local = 100;
-inline bool addr_map::has_local() const {
-  return (_has_bits_[0] & 0x00000001u) != 0;
+// repeated .addr_info locals = 100;
+inline int addr_map::locals_size() const {
+  return locals_.size();
 }
-inline void addr_map::set_has_local() {
-  _has_bits_[0] |= 0x00000001u;
+inline void addr_map::clear_locals() {
+  locals_.Clear();
 }
-inline void addr_map::clear_has_local() {
-  _has_bits_[0] &= ~0x00000001u;
+inline const ::addr_info& addr_map::locals(int index) const {
+  return locals_.Get(index);
 }
-inline void addr_map::clear_local() {
-  if (local_ != NULL) local_->::addr_info::Clear();
-  clear_has_local();
+inline ::addr_info* addr_map::mutable_locals(int index) {
+  return locals_.Mutable(index);
 }
-inline const ::addr_info& addr_map::local() const {
-  return local_ != NULL ? *local_ : *default_instance_->local_;
+inline ::addr_info* addr_map::add_locals() {
+  return locals_.Add();
 }
-inline ::addr_info* addr_map::mutable_local() {
-  set_has_local();
-  if (local_ == NULL) local_ = new ::addr_info;
-  return local_;
+inline const ::google::protobuf::RepeatedPtrField< ::addr_info >&
+addr_map::locals() const {
+  return locals_;
 }
-inline ::addr_info* addr_map::release_local() {
-  clear_has_local();
-  ::addr_info* temp = local_;
-  local_ = NULL;
-  return temp;
-}
-inline void addr_map::set_allocated_local(::addr_info* local) {
-  delete local_;
-  local_ = local;
-  if (local) {
-    set_has_local();
-  } else {
-    clear_has_local();
-  }
+inline ::google::protobuf::RepeatedPtrField< ::addr_info >*
+addr_map::mutable_locals() {
+  return &locals_;
 }
 
 // repeated .addr_info remotes = 200;
