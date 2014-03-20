@@ -17,14 +17,14 @@
 
 #include "configure.h"
 
-template<typename T, typename P>
-class acceptor : public std::enable_shared_from_this<acceptor<T,P>> {
+template<typename T, typename CONTEXT>
+class acceptor : public std::enable_shared_from_this<acceptor<T,CONTEXT>> {
     std::function<boost::asio::io_service&()> get_io_service_;
 	boost::asio::ip::tcp::acceptor acceptor_;
-    P context_;
+    CONTEXT context_;
 
 public:
-    acceptor(std::function<boost::asio::io_service&()> get_io_service, const char *addr, const int port, P context)
+    acceptor(std::function<boost::asio::io_service&()> get_io_service, const char *addr, const int port, CONTEXT context)
     : get_io_service_(get_io_service)
     , acceptor_(get_io_service_(), boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(addr), port))
     , context_(context) {}
@@ -36,7 +36,7 @@ public:
         auto peer(std::make_shared<boost::asio::ip::tcp::socket>(io_service));
 		acceptor_.async_accept(*peer,
                                std::bind(&acceptor::async_accept_handler,
-                                         std::enable_shared_from_this<acceptor<T,P>>::shared_from_this(),
+                                         std::enable_shared_from_this<acceptor<T,CONTEXT>>::shared_from_this(),
                                          peer,
 										 std::ref(io_service),
 										 std::placeholders::_1));
@@ -61,13 +61,13 @@ public:
 typedef std::list<std::shared_ptr<message_block>> buffers_list;
 typedef std::tuple<std::shared_ptr<boost::asio::ip::tcp::socket>, buffers_list> forwared_peer_context;
 
-template<typename T>
-class forward_peer : public std::enable_shared_from_this<forward_peer<T>> {
+template<typename CONTEXT>
+class forward_peer : public std::enable_shared_from_this<forward_peer<CONTEXT>> {
 
-    typedef forward_peer<T> THIS_T;
+    typedef forward_peer<CONTEXT> THIS_T;
 
 public:
-    forward_peer(boost::asio::io_service& io_service, T ep)
+    forward_peer(boost::asio::io_service& io_service, CONTEXT ep)
     : io_service_(io_service)
     , forward_endport_(ep) {}
 
@@ -112,8 +112,8 @@ public:
 
 		auto timer(std::make_shared<boost::asio::deadline_timer>(io_service_));
 		timer->expires_from_now(boost::posix_time::seconds(1));
-
 		std::weak_ptr<boost::asio::deadline_timer> wptr_timer = timer;
+
         forward_peer->async_connect(forward_endport_(),
                                     std::bind(&forward_peer::async_connect_handler,
                                               std::enable_shared_from_this<THIS_T>::shared_from_this(),
@@ -223,7 +223,7 @@ public:
 
 private:
     boost::asio::io_service &io_service_;
-    T forward_endport_;
+    CONTEXT forward_endport_;
 };
 
 int main(int argc, const char * argv[])
@@ -330,23 +330,23 @@ int main(int argc, const char * argv[])
 						memset(buf, 0, sizeof(buf));
 
 						for (auto i = 0; i < am.locals_size(); ++i) {
-							sprintf(buf, "%s:%u <-\n", am.locals(i).addr().c_str(), am.locals(i).port());
+							sprintf(buf, "%s:%u <- ", am.locals(i).addr().c_str(), am.locals(i).port());
 							s += buf;
 						}
 
-						sprintf(buf, "total dispatched times: %lu \n", total_dispatched->load());
+						sprintf(buf, "total dispatched times: %lu ", total_dispatched->load());
 
 						s += buf;
 
 						for (auto &x: *peps) {
 							memset(buf, 0, sizeof(buf));
-							sprintf(buf, "-> %s:%u %lu\n", std::get<0>(x).address().to_string().c_str(),
+							sprintf(buf, "-> %s:%u %lu ", std::get<0>(x).address().to_string().c_str(),
 									std::get<0>(x).port(),
 									std::get<1>(x)->load());
 							s += buf;
 						}
 
-						print_info("%s\n", s.c_str());
+						print_info("%s ", s.c_str());
 
 
 						timer->expires_from_now(boost::posix_time::seconds(10));
