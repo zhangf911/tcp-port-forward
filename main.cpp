@@ -266,9 +266,13 @@ int main(int argc, const char * argv[])
 	typedef std::tuple<boost::asio::ip::tcp::endpoint,std::shared_ptr<std::atomic<uint64_t>>> element;
 	typedef std::vector<element> endpoints;
 
-	auto lambda_ep_provider = [](std::shared_ptr<endpoints> eps, std::shared_ptr<std::atomic<uint64_t>> total_dispatched) ->boost::asio::ip::tcp::endpoint& {
-		static uint32_t pos = 0;
-		auto &ep = (*eps)[++pos % eps->size()];
+	auto lambda_ep_provider = [](std::shared_ptr<endpoints> eps,
+								 std::shared_ptr<std::atomic<uint64_t>> total_dispatched,
+								 ::addr_info a,
+								 std::shared_ptr<std::atomic<uint32_t>> counter) ->boost::asio::ip::tcp::endpoint& {
+//		static uint32_t pos = 0;
+		print_info("dispatch for local %s:%d remote:%u  already dispatched: %u ", a.addr().data(), a.port(), eps->size(), counter->load());
+		auto &ep = (*eps)[++*counter % eps->size()];
 
 		++(*total_dispatched);
 		++(*std::get<1>(ep));
@@ -277,11 +281,11 @@ int main(int argc, const char * argv[])
 
 	for (auto i = 0; i < global::instance().configure().maps_size(); ++i) {
 		auto provider = std::make_shared<endpoints>();
-
+		print_info("\n\n\n");
 		for (auto j = 0; j < global::instance().configure().maps(i).remotes_size(); ++j) {
 			auto addr = global::instance().configure().maps(i).remotes(j).addr();
 			auto port = global::instance().configure().maps(i).remotes(j).port();
-
+			print_info("remote addr:%s %d", addr.data(), port);
 			element e = std::make_tuple(boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(addr), port),
 										std::make_shared<std::atomic<uint64_t>>(0));
 			provider->push_back(e);
@@ -299,12 +303,17 @@ int main(int argc, const char * argv[])
 			for (auto j = 0; j < global::instance().configure().maps(i).locals_size(); ++j) {
 				auto addr = global::instance().configure().maps(i).locals(j).addr();
 				auto port = global::instance().configure().maps(i).locals(j).port();
+				print_info("local addr:%s %d", addr.data(), port);
 
-
+				typedef decltype(global::instance().configure().maps(i).locals(j)) xtype;
 				auto acceptor = std::make_shared<ACCEPTOR>(std::bind(xf, std::ref(io_services)),
 														   addr.c_str(),
 														   port,
-														   std::bind(lambda_ep_provider, provider, total_dispatched));
+														   std::bind(lambda_ep_provider,
+																	 provider,
+																	 total_dispatched,
+																	 global::instance().configure().maps(i).locals(j),
+																	 std::make_shared<std::atomic<uint32_t>>(0)));
 				acceptor->startup_async_accept();
 			}
 			struct __helper {
