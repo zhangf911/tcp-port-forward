@@ -225,6 +225,7 @@
 					"-DENABLE_ERROR",
 					"-DENABLE_LOG_TO_CONSOLE",
 					"-DENABLE_FETAL",
+					"-DENABLE_LOG4CPLUS",
 				);
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",
@@ -258,6 +259,7 @@
 					"-DENABLE_ERROR",
 					"-DENABLE_LOG_TO_CONSOLE",
 					"-DENABLE_FETAL",
+					"-DENABLE_LOG4CPLUS",
 				);
 				OTHER_LDFLAGS = (
 					"-L/usr/local/lib",

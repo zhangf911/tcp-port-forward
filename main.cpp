@@ -365,7 +365,7 @@ int main(int argc, const char * argv[])
 
 
 			auto timer(std::make_shared<boost::asio::deadline_timer>(xf(io_services)));
-            timer->expires_from_now(boost::posix_time::seconds(10));
+            timer->expires_from_now(boost::posix_time::seconds(1));
 			timer->async_wait(std::bind(__helper::on_timer,
 										timer,
 										std::ref(global::instance().configure().maps(i)),
